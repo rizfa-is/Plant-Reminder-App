@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sios.tech.plantreminderapp.domain.model.Plant
 import com.sios.tech.plantreminderapp.domain.usecase.AddPlantUseCase
 import com.sios.tech.plantreminderapp.domain.usecase.GetPlantsUseCase
+import com.sios.tech.plantreminderapp.notification.PlantAlarmScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -13,8 +14,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlantsViewModel @Inject constructor(
+    private val addPlantUseCase: AddPlantUseCase,
     private val getPlantsUseCase: GetPlantsUseCase,
-    private val addPlantUseCase: AddPlantUseCase
+    private val alarmScheduler: PlantAlarmScheduler
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(PlantsState())
@@ -41,6 +43,7 @@ class PlantsViewModel @Inject constructor(
                         notes = event.notes
                     )
                     addPlantUseCase(plant)
+                    alarmScheduler.scheduleWateringReminder(plant)
                 }
             }
         }
