@@ -16,6 +16,8 @@ import java.util.Locale
 fun PlantItem(
     plant: Plant,
     onTestNotification: (Plant) -> Unit = {},
+    onEditPlant: (Plant) -> Unit = {},
+    onDeletePlant: (Plant) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -41,16 +43,31 @@ fun PlantItem(
                 )
                 
                 Box {
+                    // More options button
                     // Debug button
                     IconButton(onClick = { showMenu = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Debug Options")
                     }
                     
-                    // Debug menu
+                    // Options menu
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit Plant") },
+                            onClick = {
+                                onEditPlant(plant)
+                                showMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete Plant") },
+                            onClick = {
+                                onDeletePlant(plant)
+                                showMenu = false
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text("Test Notification") },
                             onClick = {

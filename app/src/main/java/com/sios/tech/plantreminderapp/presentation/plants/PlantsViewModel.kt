@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sios.tech.plantreminderapp.domain.model.Plant
 import com.sios.tech.plantreminderapp.domain.usecase.AddPlantUseCase
+import com.sios.tech.plantreminderapp.domain.usecase.DeletePlantUseCase
 import com.sios.tech.plantreminderapp.domain.usecase.GetPlantsUseCase
+import com.sios.tech.plantreminderapp.domain.usecase.UpdatePlantUseCase
 import com.sios.tech.plantreminderapp.notification.PlantAlarmScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,6 +18,8 @@ import javax.inject.Inject
 class PlantsViewModel @Inject constructor(
     private val addPlantUseCase: AddPlantUseCase,
     private val getPlantsUseCase: GetPlantsUseCase,
+    private val updatePlantUseCase: UpdatePlantUseCase,
+    private val deletePlantUseCase: DeletePlantUseCase,
     private val alarmScheduler: PlantAlarmScheduler
 ) : ViewModel() {
 
@@ -46,6 +50,24 @@ class PlantsViewModel @Inject constructor(
                     alarmScheduler.scheduleWateringReminder(plant)
                 }
             }
+            is PlantsEvent.UpdatePlant -> {
+                viewModelScope.launch {
+                    val updatedPlant = event.plant.copy(
+                        name = event.name,
+                        wateringSchedule = event.wateringSchedule,
+                        notes = event.notes
+                    )
+                    updatePlantUseCase(updatedPlant)
+                    alarmScheduler.cancelWateringReminder(event.plant.id)
+                    alarmScheduler.scheduleWateringReminder(updatedPlant)
+                }
+            }
+            is PlantsEvent.DeletePlant -> {
+                viewModelScope.launch {
+                    deletePlantUseCase(event.plant)
+                    alarmScheduler.cancelWateringReminder(event.plant.id)
+                }
+            }
         }
     }
 }
@@ -60,5 +82,16 @@ sealed class PlantsEvent {
         val name: String,
         val wateringSchedule: Date,
         val notes: String
+    ) : PlantsEvent()
+
+    data class UpdatePlant(
+        val plant: Plant,
+        val name: String,
+        val wateringSchedule: Date,
+        val notes: String
+    ) : PlantsEvent()
+
+    data class DeletePlant(
+        val plant: Plant
     ) : PlantsEvent()
 }
