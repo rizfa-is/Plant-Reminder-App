@@ -9,11 +9,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.core.content.ContextCompat
+import androidx.navigation.compose.rememberNavController
 import com.sios.tech.plantreminderapp.notification.PlantNotificationService
 import com.sios.tech.plantreminderapp.presentation.components.LocalNotificationService
-import com.sios.tech.plantreminderapp.presentation.plants.PlantsScreen
+import com.sios.tech.plantreminderapp.presentation.navigation.Navigation
 import com.sios.tech.plantreminderapp.ui.theme.PlantReminderAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -66,7 +71,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             CompositionLocalProvider(LocalNotificationService provides notificationService) {
                 PlantReminderAppTheme {
-                    PlantsScreen()
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        val navController = rememberNavController()
+                        Navigation(navController)
+                    }
                 }
             }
         }
