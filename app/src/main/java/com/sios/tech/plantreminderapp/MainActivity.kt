@@ -20,6 +20,13 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    /**
+     * Permission launcher for requesting notification permissions.
+     *
+     * This launcher handles the runtime permission request for notifications
+     * on Android 13+ devices. It provides user feedback through toast messages
+     * based on whether the permission was granted or denied.
+     */
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -40,6 +47,18 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var notificationService: PlantNotificationService
 
+    /**
+     * Initializes the activity and sets up the Compose UI.
+     *
+     * This method:
+     * 1. Enables edge-to-edge display
+     * 2. Requests notification permissions if needed
+     * 3. Sets up the Compose content with CompositionLocalProvider
+     *
+     * The NotificationService is provided to the entire Compose hierarchy using
+     * CompositionLocalProvider, making it available through LocalNotificationService.current
+     * in any child composable.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -53,6 +72,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Requests notification permission for Android 13+ devices.
+     *
+     * This method checks if:
+     * 1. The device is running Android 13 or higher
+     * 2. The notification permission is already granted
+     * 3. Permission needs to be requested
+     *
+     * If permission is needed, it launches the permission request using
+     * the requestPermissionLauncher.
+     */
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
