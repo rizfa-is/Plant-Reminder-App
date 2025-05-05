@@ -1,8 +1,5 @@
 package com.sios.tech.plantreminderapp.presentation.plants
 
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,17 +10,22 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sios.tech.plantreminderapp.notification.PlantNotificationService
+import com.sios.tech.plantreminderapp.presentation.components.LocalNotificationService
 import com.sios.tech.plantreminderapp.presentation.components.PlantItem
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @Composable
 fun PlantsScreen(
     viewModel: PlantsViewModel = hiltViewModel()
 ) {
+    val scope = rememberCoroutineScope()
+    val notificationService = LocalNotificationService.current
+    val context = LocalContext.current
     val state by viewModel.state.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -47,7 +49,24 @@ fun PlantsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(state.plants) { plant ->
-                    PlantItem(plant = plant)
+                    PlantItem(
+                        plant = plant,
+                        onTestNotification = { testPlant ->
+                            scope.launch {
+                                try {
+                                    // Trigger notification immediately for testing
+                                    notificationService.showWateringNotification(
+                                        plantId = testPlant.id.toInt(),
+                                        plantName = testPlant.name
+                                    )
+                                } catch (e: Exception) {
+                                    // Log the error
+                                    e.printStackTrace()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 

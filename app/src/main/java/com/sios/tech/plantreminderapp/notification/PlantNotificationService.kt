@@ -46,8 +46,15 @@ class PlantNotificationService @Inject constructor(
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Notifications for plant watering schedules"
+                enableLights(true)
+                setShowBadge(true)
+                lockscreenVisibility = NotificationManager.IMPORTANCE_HIGH
             }
-            notificationManager.createNotificationChannel(channel)
+            try {
+                notificationManager.createNotificationChannel(channel)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -63,28 +70,40 @@ class PlantNotificationService @Inject constructor(
      * @param plantId The ID of the plant that needs watering
      * @param plantName The name of the plant to display in the notification
      */
-    fun showWateringNotification(plantId: Long, plantName: String) {
+    fun showWateringNotification(plantId: Int, plantName: String) {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
-        
+
+        val pendingIntentFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+
         val pendingIntent = PendingIntent.getActivity(
             context,
-            plantId.toInt(),
+            plantId,
             intent,
-            PendingIntent.FLAG_IMMUTABLE
+            pendingIntentFlags
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Time to Water Your Plant!")
-            .setContentText("$plantName needs watering now")
+            .setContentTitle("Water your plant!")
+            .setContentText("It's time to water $plantName")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
             .build()
 
-        notificationManager.notify(plantId.toInt(), notification)
+        try {
+            notificationManager.notify(plantId, notification)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     companion object {

@@ -33,7 +33,7 @@ class WateringReminderReceiver : BroadcastReceiver() {
         val plantName = intent.getStringExtra(EXTRA_PLANT_NAME) ?: return
 
         if (plantId != -1L) {
-            notificationService.showWateringNotification(plantId, plantName)
+            notificationService.showWateringNotification(plantId.toInt(), plantName)
         }
     }
 
