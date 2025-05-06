@@ -32,9 +32,9 @@ class MainActivity : ComponentActivity() {
      * on Android 13+ devices. It provides user feedback through toast messages
      * based on whether the permission was granted or denied.
      */
-    private val requestPermissionLauncher = registerForActivityResult(
+    private val requestNotificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
+    ) { isGranted ->
         if (isGranted) {
             Toast.makeText(
                 this,
@@ -49,6 +49,26 @@ class MainActivity : ComponentActivity() {
             ).show()
         }
     }
+
+    private val requestLocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val locationGranted = permissions.entries.all { it.value }
+        if (locationGranted) {
+            Toast.makeText(
+                this,
+                "Location permission granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            Toast.makeText(
+                this,
+                "Location permission denied. You won't receive weather update.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     @Inject
     lateinit var notificationService: PlantNotificationService
 
@@ -67,6 +87,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestLocationPermission()
         requestNotificationPermission()
         setContent {
             CompositionLocalProvider(LocalNotificationService provides notificationService) {
@@ -108,11 +129,36 @@ class MainActivity : ComponentActivity() {
                     ).show()
                 }
                 else -> {
-                    requestPermissionLauncher.launch(
+                    requestNotificationPermissionLauncher.launch(
                         Manifest.permission.POST_NOTIFICATIONS
                     )
                 }
             }
+        }
+    }
+
+    private fun requestLocationPermission() {
+        if (
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ) {
+            Toast.makeText(
+                this,
+                "Location permission already granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        } else {
+            requestLocationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         }
     }
 }
